@@ -1,12 +1,17 @@
 var $DOUYardLayoutView = null;
 
 $(function(){
-    $("#col2").DOUYardLayoutView({
-        width : 800,
-        height : 600
-    });
+    var target = $("#col2");
+    if(target) {
 
-    $DOUYardLayoutView = $('#col2').data('DOUYardLayoutView');
-    $DOUYardLayoutView.drawShape()
+        var width = target.width();
+        var height = target.height();
+        $("#col2").DOUYardLayoutView({
+            width : width,
+            height : height
+        });
 
+        $DOUYardLayoutView = $('#col2').data('DOUYardLayoutView');
+        $DOUYardLayoutView.initBlock(data);
+    }
 });

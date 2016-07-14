@@ -19,12 +19,12 @@ html, body {
     width: 140px;
     height: 100%;
     float: left;
-    background: whitesmoke;
+    background: #a6a6a6;
 }
 
 #col2{
     height: 100%;
     width: calc(100% - 140px);
-    float: left;
+    float: right;
     background: whitesmoke;
 }

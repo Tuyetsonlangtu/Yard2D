@@ -11,6 +11,7 @@
         var _renderer = null;
         var _stage = null;
         var _graphics = null;
+        var rate = 5;
 
         this.properties = function (){
             return  {
@@ -24,38 +25,63 @@
         $element = $(element), element = element;
         this.init = function() {
             _properties = $.extend({}, defaults, options);
-            _renderer = PIXI.autoDetectRenderer( _properties.width, _properties.height, { antialias: true });
+            _renderer = PIXI.autoDetectRenderer( _properties.width, _properties.height, { antialias: true, backgroundColor : 0xFFFFFF});
             _stage = new PIXI.Container();
             _graphics = new PIXI.Graphics();
             $element.append(_renderer.view);
         }
 
-        this.drawShape = function() {
-            _graphics.beginFill(0xFF3300);
-            _graphics.lineStyle(4, 0xffd900, 1);
+        this.initBlock = function(blocks) {
 
-            _graphics.moveTo(50,50);
-            _graphics.lineTo(250, 50);
-            _graphics.lineTo(100, 100);
-            _graphics.lineTo(50, 50);
-            _graphics.endFill();
+           /* if(blocks && blocks.length >0){
+                for(var i=0; i<blocks.length; i++){
+                   if(blocks[i].blckIdxNo == 0){
+                       var bays = blocks[i].bays;
+                       for(var j=0; j <bays.length; j++){
+                           var left =  bays[j].x * rate;
+                           var top = rate;
+                           var width = bays[j].width * rate;
+                           var height = bays[j].height * rate;
+                           var rec_options = { line_width : 1, line_color : "0x0000FF" , fill_color : "0xFF700B", top : top, left : left, width : width, height : height }
+                           drawRectangle(rec_options);
+                       }
+                   }
+                }
+            }*/
 
-            _graphics.lineStyle(2, 0x0000FF, 1);
-            _graphics.beginFill(0xFF700B, 1);
-            _graphics.drawRect(50, 250, 120, 120);
+            var bays = blocks.bays;
+            for (var key in bays){
+                if (bays.hasOwnProperty(key)) {
+                    var obj = bays[key];
+                    if(obj){
+                        var cells = obj.cells;
+                        if(cells){
 
-            _graphics.lineStyle(2, 0xFF00FF, 1);
-            _graphics.beginFill(0xFF00BB, 0.25);
-            _graphics.drawRoundedRect(150, 450, 300, 100, 15);
-            _graphics.endFill();
-
-            _graphics.lineStyle(0);
-            _graphics.beginFill(0xFFFF0B, 0.5);
-            _graphics.drawCircle(470, 90,60);
-            _graphics.endFill();
-
+                            for (var key1 in cells){
+                                if (cells.hasOwnProperty(key1)) {
+                                    var left =  cells[key1].xStart * rate;
+                                    var top = cells[key1].yStart * rate;
+                                    var width = cells[key1].width * rate;
+                                    var height = cells[key1].length * rate;
+                                    var rec_options = { line_width : 2, line_color : "0x000000" , fill_color : "0xFFFFFF", top : top, left : left, width : width, height : height }
+                                    drawRectangle(rec_options);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             _stage.addChild(_graphics);
             animate();
+        }
+
+        var drawRectangle = function( options ){
+
+            _graphics.lineStyle(options.line_width, options.line_color, 1);
+            _graphics.beginFill(options.fill_color, 1);
+            _graphics.drawRect(options.left, options.top, options.width, options.height);
+            _graphics.endFill();
+
         }
 
         var animate = function(){
