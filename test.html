@@ -1,0 +1,105 @@
+<html><head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="googlebot" content="noindex, nofollow">
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/fabric.js/1.4.0/fabric.min.js"></script>
+
+    <title>Snapping of objects by gcollect</title>
+    <script type="text/javascript">//<![CDATA[
+    window.onload=function(){
+        window.canvas = new fabric.Canvas('fabriccanvas');
+        window.counter = 0;
+        var newleft = 0;
+        var edgedetection = 40; //pixels to snap
+
+        canvas.selection = false;
+        plusrect();
+        plusrect();
+        plusrect();
+
+        function plusrect(top, left, width, height, fill) {
+            window.canvas.add(new fabric.Rect({
+                top: 300,
+                name: 'rectangle ' + window.counter,
+                left: 0 + newleft,
+                width: 100,
+                height: 100,
+                fill: 'rgba(' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ', 0.75)',
+                lockRotation: true,
+                originX: 'left',
+                originY: 'top',
+                cornerSize: 15,
+                hasRotatingPoint: false,
+                perPixelTargetFind: true,
+                minScaleLimit: 1,
+                maxHeight: document.getElementById("fabriccanvas").height,
+                maxWidth: document.getElementById("fabriccanvas").width,
+            }));
+            window.counter++;
+            newleft += 200;
+        }
+        this.canvas.on('object:moving', function (e) {
+            var obj = e.target;
+            obj.setCoords(); //Sets corner position coordinates based on current angle, width and height
+            canvas.forEachObject(function (targ) {
+                activeObject = canvas.getActiveObject();
+
+                if (targ === activeObject) return;
+
+                var rec1 = { top : activeObject.oCoords.tl.y, left : activeObject.oCoords.tl.x, right: activeObject.oCoords.tr.x , bottom : activeObject.oCoords.br.y };
+                var rec2 = { top : targ.oCoords.tl.y, left : targ.oCoords.tl.x, right: targ.oCoords.tr.x , bottom : targ.oCoords.br.y };
+
+                var isOverlap = intersectRect(rec1,rec2);
+                if(isOverlap){
+                    targ.strokeWidth = 10;
+                    targ.stroke = 'red';
+                }
+                else{
+                    activeObject.strokeWidth = 1;
+                    activeObject.stroke = 'black';
+                }
+
+                /*if (Math.abs(activeObject.oCoords.tr.x - targ.oCoords.tl.x) < edgedetection) {
+                    activeObject.left = targ.left - activeObject.currentWidth;
+                }
+                if (Math.abs(activeObject.oCoords.tl.x - targ.oCoords.tr.x) < edgedetection) {
+                    activeObject.left = targ.left + targ.currentWidth;
+                }
+                if (Math.abs(activeObject.oCoords.br.y - targ.oCoords.tr.y) < edgedetection) {
+                    activeObject.top = targ.top - activeObject.currentHeight;
+                }
+                if (Math.abs(targ.oCoords.br.y - activeObject.oCoords.tr.y) < edgedetection) {
+                    activeObject.top = targ.top + targ.currentHeight;
+                }
+                if (activeObject.intersectsWithObject(targ) && targ.intersectsWithObject(activeObject)) {
+                    targ.strokeWidth = 10;
+                    targ.stroke = 'red';
+                } else {
+                    targ.strokeWidth = 0;
+                    targ.stroke = false;
+                }
+                if (!activeObject.intersectsWithObject(targ)) {
+                    activeObject.strokeWidth = 0;
+                    activeObject.stroke = false;
+                }*/
+            });
+        });
+
+        function intersectRect(r1, r2) {
+            return !(r2.left > r1.right ||
+            r2.right < r1.left ||
+            r2.top > r1.bottom ||
+            r2.bottom < r1.top);
+        }
+    }
+
+    //]]>
+
+    </script>
+
+
+</head>
+
+<body>
+<canvas id="fabriccanvas" width="1500" height="900"></canvas>
+</body></html>
