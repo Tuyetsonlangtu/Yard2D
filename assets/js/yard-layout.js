@@ -3,6 +3,7 @@
     $.DOUYardLayoutView = function(element, options) {
 
         var defaults = {
+            canvas : "canvas",
             width: window.innerWidth / 2,
             height: window.innerHeight / 2
         }
