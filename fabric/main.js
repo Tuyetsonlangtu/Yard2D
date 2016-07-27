@@ -36,8 +36,6 @@ $(function(){
     canvas.setWidth(500);
     canvas.setHeight(500);
     canvas.renderAll();
-
-
     canvas.isDrawingMode=false;
     //Declaring the variables
     var isMouseDown=false;
