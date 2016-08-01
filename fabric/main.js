@@ -1,149 +1,100 @@
-var canvas = null ;
+var canvas = null;
 var rate = 10;
 
-$(function(){
-    canvas = new fabric.Canvas('yard-canvas');
-    canvas.renderOnAddRemove=false
-    canvas.selection = false;
-
-    canvas.on('object:moving', function (e) {
-        var obj = e.target;
-        obj.setCoords(); //Sets corner position coordinates based on current angle, width and height
-        canvas.forEachObject(function (targ) {
-            activeObject = canvas.getActiveObject();
-
-            if (targ === activeObject) return;
-
-            var rec1 = { top : activeObject.oCoords.tl.y, left : activeObject.oCoords.tl.x, right: activeObject.oCoords.tr.x , bottom : activeObject.oCoords.br.y };
-            var rec2 = { top : targ.oCoords.tl.y, left : targ.oCoords.tl.x, right: targ.oCoords.tr.x , bottom : targ.oCoords.br.y };
-            var isOverlap = intersectRect(rec1,rec2);
-            if(isOverlap){
-                targ.strokeWidth = 2;
-                targ.stroke = 'red';
-            }
-            else{
-                targ.strokeWidth = 0.5;
-                targ.stroke = 'black';
-            }
-        });
-    });
-
-
-
-
+$(function () {
+    canvas = new fabric.Canvas('c1');
+    canvas.renderOnAddRemove = false
     //Draw block
     drawBlock();
-    canvas.setWidth(500);
-    canvas.setHeight(500);
+    initEvent();
+    /////////////
     canvas.renderAll();
-    canvas.isDrawingMode=false;
-    //Declaring the variables
-    var isMouseDown=false;
-    var OriginX=new Array();
-    var OriginY= new Array();
-    var refRect;
-    var canDraw = true;
-
-    if( canDraw ) {
-        //Setting the mouse events
-        canvas.on('mouse:down',function(event){
-            //Defining the procedure
-            isMouseDown=true;
-            OriginX=[];
-            OriginY=[];
-
-            //Getting the mouse Co-ordinates
-            var posX=event.e.clientX;
-            var posY=event.e.clientY;
-            OriginX.push(posX);
-            OriginY.push(posY);
-
-            //Creating the rectangle object
-            var rect = new fabric.Rect({
-                left:OriginX[0],
-                top:OriginY[0],
-                width:0,
-                height:0,
-                stroke:'blue',
-                strokeWidth:3,
-                fill:''
-            });
-            canvas.add(rect);
-            rect.lockRotation = true;
-            refRect=rect;  //!**Reference of rectangle object
-
-        });
-    }
-
-    canvas.on('mouse:move', function(event){
-        if(canDraw) {
-            var posX=event.e.clientX;
-            var posY=event.e.clientY;
-            refRect.setWidth(Math.abs((posX-refRect.get('left'))));
-            refRect.setHeight(Math.abs((posY-refRect.get('top'))));
-            refRect.setCoords();
-            canvas.renderAll();
-        }
-    });
-
-    canvas.on('mouse:up',function(){
-        canDraw = false;
-    });
 });
 
+function initEvent() {
+    canvas.on('mouse:down', function (options) {
+        console.log(options);
+        var target = canvas.findTarget(options.e);
+        console.log(target);
+        target.fill = 'red';
+        target.active = true;
+        drawLabel('R', target.left + target.width/4, target.top  + target.height /4);
+    });
+}
+
 function drawBlock() {
-    var x = 0, y = 0;
-    for(var bayIdx in data.bays){
+    var x = 20, y = 20, bayName = 0;
+    for (var bayIdx in data.bays) {
         var bay = data.bays[bayIdx];
-        if(bayIdx != '7' && bayIdx != '39'){
-            y = 0;
-            for(var i = 0; i< bay.cells.length; i++){
+        if (bayIdx != '7' && bayIdx != '39') {
+            y = 20;
+            for (var i = 0; i < bay.cells.length; i++) {
                 var cell = bay.cells[i];
-                var options = {top : y, left : x , width : zoom(cell.width), height : zoom(cell.length), selectable : false, hasControls :false , strokeWidth : 0.5, strokeColor : "black" , fillColor : "", opacity : 1};
+                var options = {
+                    top: y,
+                    left: x,
+                    width: zoom(cell.width),
+                    height: zoom(cell.length),
+                    selectable: false,
+                    hasControls: false,
+                    idx: bayIdx + '-' + cell.rowId
+                };
                 drawRectangle(options);
-                y+= zoom(cell.length);
+                if (bayIdx == '1') {
+                    drawRowName((i + 1).toString(), 0, y, zoom(cell.length), zoom(bay.width));
+                }
+                y += zoom(cell.length);
             }
-            x+= zoom(bay.width);
+            bayName += 1;
+            drawBayName(bayName.toString(), x, 0, zoom(bay.width));
+            x += zoom(bay.width);
         }
     }
 }
 
-function zoom(val){
+function drawBayName(name, x, y, bayWidth) {
+    if (name.split('').length == 1) {
+        x += bayWidth / 2;
+    } else {
+        x += bayWidth / 4;
+    }
+    drawLabel(name, x, y);
+}
+
+function drawRowName(name, x, y, cellLen, bayWidth) {
+    y += cellLen / 3;
+    if (name.split('').length == 1) {
+        x += bayWidth / 4;
+    }
+    drawLabel(name, x, y);
+}
+
+function zoom(val) {
     return val * rate;
 }
 
-function drawRectangle(options){
+function drawLabel(name, x, y) {
+    var text = new fabric.Text(name, {
+        left: x, top: y, fontSize: 15, fontWeight: 'bold',
+        selectable: false, hasControls: false, hasRotatingPoint: false
+    });
+    canvas.add(text);
+}
+function drawRectangle(options) {
     var rect2 = new fabric.Rect({
-        top : options.top,
-        left :  options.left,
-        width : options.width,
-        height : options.height,
-        stroke: options.strokeColor,
-        strokeWidth: options.strokeWidth,
-        fill:options.fillColor ,
-        selectable: options.selectable,
-        hasControls : options.hasControls ,
-        hasRotatingPoint : false,
-        opacity : options.opacity,
-        originX: 'left',
-        originY: 'top',
+        top: options.top,
+        left: options.left,
+        width: options.width,
+        height: options.height,
+        stroke: 'black',
+        strokeWidth: 0.5,
+        fill: '',
+        hoverCursor: 'mouse',
+        selectable: false,
+        hasControls: options.hasControls,
+        hasRotatingPoint: false,
+        idx: options.idx,
+        cursor: 'pointer'
     });
     canvas.add(rect2);
-}
-
-function drawLine(){
-    var line = new fabric.Line([50, 55, 300, 55], {
-        stroke: 'red',
-        strokeWidth: 1,
-        hasControls: false,
-        hasRotatingPoint: false
-    });
-    return line;
-}
-
-function intersectRect(r1, r2) {
-    return !(r2.left > r1.right ||
-    r2.right < r1.left ||
-    r2.top > r1.bottom ||
-    r2.bottom < r1.top);
 }

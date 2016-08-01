@@ -7,7 +7,7 @@
             width: window.innerWidth / 2,
             height: window.innerHeight / 2
         }
-
+        var isResize = false;
         var _properties = {};
         var _canvas = null;
         var _rate = 5;
@@ -37,22 +37,93 @@
         }
 
         this.drawBlock = function(data) {
-            var x = 0, y = 0;
+            var x = 20, y = 20, bayName = 0;
             for(var bayIdx in data.bays){
                 var bay = data.bays[bayIdx];
                 if(bayIdx != '7' && bayIdx != '39'){
-                    y = 0;
+                    y = 20;
                     for(var i = 0; i< bay.cells.length; i++){
                         var cell = bay.cells[i];
-                        var options = {top : y, left : x , width : zoom(cell.width), height : zoom(cell.length), selectable : false, hasControls :false , strokeWidth : 0.5, strokeColor : "black" , fillColor : "", opacity : 1};
+                        var options = {type: 'normal', top : y, left : x , width : zoom(cell.width), height : zoom(cell.length), selectable : false, hasControls :false , strokeWidth : 0.5, strokeColor : "black" , fillColor : "", opacity : 1};
                         this.drawRectangle(options);
+                        if (bayIdx == '1') {
+                            var optsRowLabel = {
+                                name:(i + 1).toString() ,
+                                x: 0,
+                                y: y,
+                                color: 'black',
+                                type: 'normal'
+                            };
+                            drawRowName(optsRowLabel, zoom(cell.length), zoom(bay.width));
+                        }
                         y+= zoom(cell.length);
                     }
+                    bayName += 1;
+                    var optsBayLabel = {
+                        name:bayName.toString() ,
+                        x: x,
+                        y: 0,
+                        color: 'black',
+                        type: 'normal'
+                    };
+                    drawBayName(optsBayLabel, zoom(bay.width));
                     x+= zoom(bay.width);
                 }
             }
+            x = 20;bayName = 0;
+            for(var bayIdx in data.bayExts){
+                var bay = data.bayExts[bayIdx];
+
+               /* if(bayIdx != '7' && bayIdx != '39'){*/
+                    y = 20;
+                    for(var i = 0; i< bay.cells.length; i++){
+                        var cell = bay.cells[i];
+                        var options = {type: 'wide', top : y, left : x , width : zoom(cell.width), height : zoom(cell.length), selectable : false, hasControls :false , strokeWidth : 0.5, strokeColor : "green" , fillColor : "", opacity : 1};
+                        this.drawRectangle(options);
+                        y+= zoom(cell.length);
+                    }
+                    bayName += 1;
+                    var optsBayLabel = {
+                        name:bayName.toString() ,
+                        x: x,
+                        y: y,
+                        color: 'green',
+                        type: 'wide'
+                    };
+                    drawBayName(optsBayLabel, zoom(bay.width));
+                    x+= zoom(bay.width);
+                //}
+            }
+
 
             _canvas.renderAll();
+        }
+        function drawBayName(opts, bayWidth) {
+            if (opts.name.split('').length == 1) {
+                opts.x += bayWidth / 2;
+            } else {
+                opts.x += bayWidth / 4;
+            }
+
+            drawLabel(opts);
+        }
+
+        function drawRowName(opts, cellLen, bayWidth) {
+            opts.y += cellLen / 3;
+            if (opts.name.split('').length == 1) {
+                opts.x += bayWidth / 4;
+            }
+            drawLabel(opts);
+        }
+        function drawLabel(opts) {
+
+            var text = new fabric.Text(opts.name, {
+                left: opts.x, top: opts.y, fontSize: 15, fontWeight: 'bold',
+                selectable: false, hasControls: false, hasRotatingPoint: false,
+                fill: opts.color || 'black',
+                type: opts.type
+            });
+            _canvas.add(text);
         }
 
         this.drawRectangle = function(options){
@@ -69,7 +140,9 @@
                 hasRotatingPoint : false,
                 opacity : options.opacity,
                 originX: 'left',
-                originY: 'top'
+                originY: 'top',
+                type: options.type,
+
             });
             rect.myCustomOptionKeepStrokeWidth = options.strokeWidth;
             _canvas.add(rect);
@@ -119,13 +192,22 @@
 
                     var isOverlap = intersectRect(rec1,rec2);
                     if(isOverlap){
-                        targ.strokeWidth = 1;
-                        targ.stroke = 'red';
-                        selectedObjs.push(targ);
+                        if(targ.type == 'normal'){
+                            targ.strokeWidth = 1;
+                            targ.stroke = 'red';
+                            selectedObjs.push(targ);
+                        }
+
                     }
                     else{
-                        targ.strokeWidth = 0.5;
-                        targ.stroke = 'black';
+                        if(targ.type == 'normal'){
+                            targ.strokeWidth = 0.5;
+                            targ.stroke = 'black';
+                        }else {
+                             targ.strokeWidth = 0.5;
+                             targ.stroke = 'green';
+                         }
+
                     }
 
                     if (activeObject.intersectsWithObject(targ) && targ.intersectsWithObject(activeObject)) {
@@ -144,20 +226,20 @@
         }
 
         var resizeSelection = function (object, position) {
-            if(object && position && position.top_left && position.top_right && position.bottom_left && position.bottom_right){
-                var width = position.top_right.right - position.top_left.left;
-                var height = position.bottom_left.bottom - position.top_left.top;
-                object.width = width;
-                object.height = height;
-                object.top = position.top_left.top;
-                object.left = position.top_left.left;
-            }
-            _canvas.renderAll();
+            //if(!isResize){
+                if(object && position && position.top_left && position.top_right && position.bottom_left && position.bottom_right){
+                    var width = position.top_right.right - position.top_left.left;
+                    var height = position.bottom_left.bottom - position.top_left.top;
+                    object.width = width;
+                    object.height = height;
+                    object.top = position.top_left.top;
+                    object.left = position.top_left.left;
+                }
+                _canvas.renderAll();
+                isResize = true;
+            //}
+
         }
-
-
-
-
         //Init when onload page
         this.init();
 
@@ -237,9 +319,10 @@
 
         //Object event
         _canvas.on('object:moving', function (e) {
+
             e.target.set({
-                left: Math.round(e.target.left / (_properties.rate * 2.35)) * (_properties.rate * 2.35),
-                top: Math.round(e.target.top / ( _properties.rate * 4 ) ) * (_properties.rate * 4)
+                left: Math.round(e.target.left / (_properties.rate * 2.35)) * (_properties.rate * 2.35) + 20,
+                top: Math.round(e.target.top / ( _properties.rate * 4 ) ) * (_properties.rate * 4) - 20
             });
 
             drawSelectionBox(e);
